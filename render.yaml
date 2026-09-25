@@ -1,0 +1,21 @@
+# Render Blueprint: one web service that serves the API and the built React app.
+# The database lives outside Render (Supabase or Neon) — paste its URL into DATABASE_URL.
+services:
+  - type: web
+    name: taskboard
+    runtime: node
+    plan: free
+    buildCommand: npm run build
+    startCommand: npm start # runs `prisma migrate deploy`, then starts Express
+    healthCheckPath: /
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NODE_VERSION
+        value: "22"
+      - key: JWT_SECRET
+        generateValue: true
+      - key: DATABASE_URL
+        sync: false # set in the Render dashboard
+      - key: CLIENT_URL
+        sync: false # your public URL, e.g. https://taskboard.onrender.com (used in invite links)
