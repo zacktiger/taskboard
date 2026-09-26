@@ -398,14 +398,12 @@ The production setup is **one Render web service** plus a **Postgres database on
 - `CLIENT_URL`: the site's own URL, e.g. `https://taskboard.onrender.com` (used in invite links)
 - `JWT_SECRET` is generated automatically.
 
-**3. Deploy.** The build installs both apps, generates the Prisma client and builds React. The start command runs `prisma migrate deploy` before starting Express, so the tables are created on the first boot.
+**3. Deploy.** The build installs both apps, generates the Prisma client and builds React. On every start, `npm start`:
+1. runs `prisma migrate deploy` to create or update the tables,
+2. runs the seed, which creates the demo accounts the first time and does nothing afterwards,
+3. starts Express.
 
-**4. (Optional) Load the demo accounts** once, from your machine:
-```bash
-cd backend
-DATABASE_URL="<production connection string>" npx prisma db seed
-```
-Run it only once: the seed creates fixed emails and fails if they already exist.
+No manual database steps are needed. Open the URL and click a demo account on the login page.
 
 > Render's free plan sleeps after 15 minutes idle, so the first request after that takes about a minute.
 

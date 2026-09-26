@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "node --env-file=.env --watch src/index.js",
     "build": "prisma generate",
-    "start": "prisma migrate deploy && node --env-file-if-exists=.env src/index.js",
+    "start": "prisma migrate deploy && node --env-file-if-exists=.env prisma/seed.js && node --env-file-if-exists=.env src/index.js",
     "db:migrate": "prisma migrate dev",
     "db:seed": "prisma db seed",
     "db:reset": "prisma migrate reset"

@@ -1,11 +1,18 @@
 // Demo data: one org with an admin, a member and a viewer, plus a second org to test isolation.
-// Run with `npm run db:seed`. Every demo password is "password123".
+// Every demo password is "password123".
+// Safe to run on every deploy (`npm start` does): if the demo admin already exists, it does nothing.
 import bcrypt from 'bcryptjs';
 import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
 async function main() {
+  const alreadySeeded = await prisma.user.findUnique({ where: { email: 'admin@acme.test' } });
+  if (alreadySeeded) {
+    console.log('Demo data already exists, skipping seed.');
+    return;
+  }
+
   const passwordHash = await bcrypt.hash('password123', 10);
 
   const acme = await createOrg('Acme Inc', [

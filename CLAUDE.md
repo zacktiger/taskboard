@@ -160,6 +160,6 @@ cd frontend && npm install && npm run dev   # app on :5173, proxies /api to :400
 `npm run db:reset` (in `backend/`) wipes and re-seeds the database.
 
 **Deploy:** one Render web service (`render.yaml`) + Postgres on Neon/Supabase. Root `npm run build`
-builds both apps; root `npm start` runs `prisma migrate deploy` then Express, which also serves
+builds both apps; root `npm start` runs `prisma migrate deploy`, the idempotent seed, then Express, which also serves
 `frontend/dist` when `NODE_ENV=production` (same origin, so no CORS). `prisma` is a runtime
 dependency for that reason. Don't add a health endpoint — it would change the 28-endpoint count.

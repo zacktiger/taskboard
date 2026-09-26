@@ -6,7 +6,7 @@ services:
     runtime: node
     plan: free
     buildCommand: npm run build
-    startCommand: npm start # runs `prisma migrate deploy`, then starts Express
+    startCommand: npm start # migrate → seed demo data if missing → start Express
     healthCheckPath: /
     envVars:
       - key: NODE_ENV
