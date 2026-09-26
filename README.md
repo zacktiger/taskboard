@@ -4,6 +4,8 @@ A project manager for teams. An **organization** has **teams**, teams own **proj
 
 Built with **React + Express + Prisma + PostgreSQL**.
 
+**Live demo: [taskboard-bf5e.onrender.com](https://taskboard-bf5e.onrender.com)**. On the login page, click **admin**, **member** or **viewer** to sign in as that role (password `password123`). It's on Render's free plan, so the first load after it has been idle can take about a minute.
+
 - **4 tenant layers:** organization → team → project → task. Every tenant-owned row stores `orgId`.
 - **28 REST endpoints.** Every one that touches tenant data (23 of 28) filters by the caller's `orgId`. Asking for another org's record returns **404, not 403**, so the API never confirms that it exists.
 - **Auth:** 15-minute JWT access tokens, plus refresh tokens that are **stored hashed, single-use, and rotated**. **Reuse detection** logs the user out of every device.
