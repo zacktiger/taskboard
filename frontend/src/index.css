@@ -1,9 +1,42 @@
 @import "tailwindcss";
 
+/* Design tokens: "the production card rack".
+   Kanban started as physical cards slotted into racks on a factory floor, so the page is the
+   rack (cool grey steel), tasks are card stock, and colour on a card means priority. */
 @theme {
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Barlow", ui-sans-serif, system-ui, sans-serif;
+  --font-condensed: "Barlow Condensed", "Barlow", ui-sans-serif, sans-serif;
+
+  --color-rack: #dde2e0;        /* page background */
+  --color-rack-deep: #cfd6d3;   /* column "slots" on the board */
+  --color-stock: #fffefa;       /* cards, panels, inputs */
+  --color-ink: #1f2a2e;         /* text and strong borders */
+  --color-ink-soft: #4e5a5e;    /* secondary text (5:1+ on rack and stock) */
+  --color-line: #b9c2bf;        /* hairline borders */
+  --color-floor: #1e6b52;       /* the one action colour: buttons, focus, active nav */
+  --color-floor-dark: #17553f;
+
+  /* Priority only (plus errors/destructive for red). Never decoration. */
+  --color-tab-high: #c7362f;
+  --color-tab-medium: #e0a526;
+  --color-tab-low: #3f74ae;
 }
 
 body {
-  @apply bg-zinc-50 text-zinc-900 antialiased;
+  @apply bg-rack font-sans text-ink antialiased;
+}
+
+/* Visible keyboard focus everywhere, in the action colour. */
+:focus-visible {
+  outline: 2px solid var(--color-floor);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
 }

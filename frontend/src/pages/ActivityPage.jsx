@@ -1,7 +1,7 @@
 // The org's audit log as a readable feed.
 import { useApi } from '../hooks/useApi.js';
 import { STATUS_LABELS } from '../utils/board.js';
-import { Avatar, Card, EmptyState, Loading, PageHeader, timeAgo } from '../components/ui.jsx';
+import { Card, EmptyState, Loading, PageHeader, timeAgo } from '../components/ui.jsx';
 
 // Turns each logged action into a sentence. `m` is the activity's `meta` object.
 const DESCRIBE = {
@@ -33,25 +33,30 @@ export default function ActivityPage() {
 
   return (
     <>
-      <PageHeader title="Activity" subtitle="The latest 50 changes across your organization" />
+      <PageHeader title="Activity" subtitle="The latest 50 changes in your organization, newest first." />
       <Loading data={data} error={error}>
         {({ activities }) =>
           activities.length === 0 ? (
             <EmptyState title="Nothing has happened yet" />
           ) : (
-            <Card>
-              <ul className="divide-y divide-zinc-100">
+            <Card className="max-w-4xl">
+              <ol className="divide-y divide-line">
                 {activities.map((activity) => (
-                  <li key={activity.id} className="flex items-center gap-3 px-5 py-3.5 text-sm">
-                    <Avatar name={activity.actor.name} size="sm" />
-                    <p className="flex-1">
+                  <li key={activity.id} className="grid grid-cols-[6.5rem_minmax(0,1fr)] items-baseline gap-4 px-5 py-3 sm:grid-cols-[8rem_minmax(0,1fr)]">
+                    <time
+                      dateTime={activity.createdAt}
+                      title={new Date(activity.createdAt).toLocaleString()}
+                      className="text-sm text-ink-soft tabular-nums"
+                    >
+                      {timeAgo(activity.createdAt)}
+                    </time>
+                    <p>
                       <span className="font-medium">{activity.actor.name}</span>{' '}
-                      <span className="text-zinc-600">{describe(activity)}</span>
+                      <span className="text-ink-soft">{describe(activity)}</span>
                     </p>
-                    <time className="shrink-0 text-xs text-zinc-400">{timeAgo(activity.createdAt)}</time>
                   </li>
                 ))}
-              </ul>
+              </ol>
             </Card>
           )
         }

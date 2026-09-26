@@ -7,6 +7,7 @@ import { useAuth } from '../context/AuthContext.jsx';
 import { Avatar, Button, Card, ErrorMessage, Input, Loading, PageHeader, RoleBadge, Select, timeAgo } from '../components/ui.jsx';
 
 const ROLES = ['ADMIN', 'MEMBER', 'VIEWER'];
+const ROLE_LABELS = { ADMIN: 'Admin', MEMBER: 'Member', VIEWER: 'Viewer' };
 
 export default function MembersPage() {
   const { user } = useAuth();
@@ -34,24 +35,24 @@ export default function MembersPage() {
 
   return (
     <>
-      <PageHeader title="Members" subtitle="Who's in your organization and what they can do" />
+      <PageHeader title="Members" subtitle="Who is in your organization and what each person can do." />
       <div className="mb-4">
         <ErrorMessage message={error} />
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[1fr_22rem]">
+      <div className="grid items-start gap-6 lg:grid-cols-[1fr_22rem]">
         <Card>
           <Loading data={members.data} error={members.error}>
             {({ members: list }) => (
-              <ul className="divide-y divide-zinc-100">
+              <ul className="divide-y divide-line">
                 {list.map((member) => (
                   <li key={member.id} className="flex flex-wrap items-center gap-3 px-5 py-4">
                     <Avatar name={member.name} />
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-medium">
-                        {member.name} {member.id === user.id && <span className="text-zinc-400">(you)</span>}
+                      <p className="truncate font-medium">
+                        {member.name} {member.id === user.id && <span className="font-normal text-ink-soft">(you)</span>}
                       </p>
-                      <p className="truncate text-xs text-zinc-500">{member.email}</p>
+                      <p className="truncate text-sm text-ink-soft">{member.email}</p>
                     </div>
                     {/* You can't change your own role or remove yourself from here. */}
                     {member.id === user.id ? (
@@ -66,11 +67,11 @@ export default function MembersPage() {
                             }
                           >
                             {ROLES.map((role) => (
-                              <option key={role} value={role}>{role}</option>
+                              <option key={role} value={role}>{ROLE_LABELS[role]}</option>
                             ))}
                           </Select>
                         </div>
-                        <Button variant="ghost" className="text-xs" onClick={() => removeMember(member)}>
+                        <Button variant="ghost" onClick={() => removeMember(member)}>
                           Remove
                         </Button>
                       </div>
@@ -86,24 +87,24 @@ export default function MembersPage() {
           <InviteForm onInvited={() => invitations.reload()} />
 
           <Card className="p-5">
-            <h2 className="mb-3 text-sm font-semibold">Pending invites</h2>
+            <h2 className="mb-3 font-condensed text-xl font-semibold">Pending invites</h2>
             <Loading data={invitations.data} error={invitations.error}>
               {({ invitations: list }) =>
                 list.length === 0 ? (
-                  <p className="text-sm text-zinc-400">None</p>
+                  <p className="text-ink-soft">No pending invites.</p>
                 ) : (
                   <ul className="space-y-3">
                     {list.map((invite) => (
-                      <li key={invite.id} className="flex items-center gap-2 text-sm">
+                      <li key={invite.id} className="flex items-center gap-2">
                         <div className="min-w-0 flex-1">
                           <p className="truncate">{invite.email}</p>
-                          <p className="text-xs text-zinc-500">
-                            {invite.role.toLowerCase()} · sent {timeAgo(invite.createdAt)}
+                          <p className="text-sm text-ink-soft">
+                            Invited as {ROLE_LABELS[invite.role].toLowerCase()}, {timeAgo(invite.createdAt)}
                           </p>
                         </div>
                         <button
                           onClick={() => run(() => api(`/invitations/${invite.id}`, { method: 'DELETE' }))}
-                          className="text-xs text-zinc-400 hover:text-red-600"
+                          className="rounded px-1.5 py-0.5 text-sm text-ink-soft hover:text-tab-high"
                         >
                           Revoke
                         </button>
@@ -149,13 +150,13 @@ function InviteForm({ onInvited }) {
 
   return (
     <Card className="p-5">
-      <h2 className="mb-3 text-sm font-semibold">Invite someone</h2>
+      <h2 className="mb-3 font-condensed text-xl font-semibold">Invite someone</h2>
       <form onSubmit={handleSubmit} className="space-y-3">
         <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="name@company.com" required />
         <div className="flex gap-2">
           <Select value={role} onChange={(e) => setRole(e.target.value)}>
             {ROLES.map((r) => (
-              <option key={r} value={r}>{r}</option>
+              <option key={r} value={r}>{ROLE_LABELS[r]}</option>
             ))}
           </Select>
           <Button type="submit" className="shrink-0">Invite</Button>
@@ -164,10 +165,10 @@ function InviteForm({ onInvited }) {
       </form>
 
       {link && (
-        <div className="mt-4 rounded-lg bg-indigo-50 p-3">
-          <p className="mb-2 text-xs font-medium text-indigo-900">Share this link — it's only shown once:</p>
-          <p className="mb-2 break-all font-mono text-[11px] text-indigo-800">{link}</p>
-          <Button variant="secondary" className="w-full text-xs" onClick={copyLink}>
+        <div className="mt-4 rounded border border-floor bg-rack p-3">
+          <p className="mb-1 font-medium">Send this link to them. It's shown only once.</p>
+          <p className="mb-3 text-sm break-all text-ink-soft">{link}</p>
+          <Button variant="secondary" className="w-full" onClick={copyLink}>
             {copied ? 'Copied!' : 'Copy link'}
           </Button>
         </div>

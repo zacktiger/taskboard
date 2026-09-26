@@ -1,4 +1,4 @@
-// Home page: every project in the org as a card with its progress.
+// Home page: every project in the org as one row of a list, with its progress by column.
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../services/api.js';
@@ -17,7 +17,7 @@ export default function ProjectsPage() {
     <>
       <PageHeader
         title="Projects"
-        subtitle="Everything your organization is working on"
+        subtitle="Every project in your organization. Open one to see its board."
         action={allowed('project:write') && <Button onClick={() => setCreating(true)}>New project</Button>}
       />
 
@@ -26,11 +26,13 @@ export default function ProjectsPage() {
           projects.length === 0 ? (
             <EmptyState title="No projects yet">Create one to start a board.</EmptyState>
           ) : (
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {projects.map((project) => (
-                <ProjectCard key={project.id} project={project} />
-              ))}
-            </div>
+            <Card>
+              <ul className="divide-y divide-line">
+                {projects.map((project) => (
+                  <ProjectRow key={project.id} project={project} />
+                ))}
+              </ul>
+            </Card>
           )
         }
       </Loading>
@@ -48,31 +50,53 @@ export default function ProjectsPage() {
   );
 }
 
-function ProjectCard({ project }) {
-  const { TODO, IN_PROGRESS, DONE } = project.taskCounts;
-  const total = TODO + IN_PROGRESS + DONE;
-  const percentDone = total === 0 ? 0 : Math.round((DONE / total) * 100);
+// Progress is split into the board's three columns, so you can see where the work sits,
+// not just how much is done. Shades of ink only: colour is reserved for priority.
+const SEGMENTS = [
+  { status: 'DONE', label: 'done', swatch: 'bg-ink' },
+  { status: 'IN_PROGRESS', label: 'in progress', swatch: 'bg-ink-soft/60' },
+  { status: 'TODO', label: 'to do', swatch: 'bg-line' },
+];
+
+function ProjectRow({ project }) {
+  const counts = project.taskCounts;
+  const total = counts.TODO + counts.IN_PROGRESS + counts.DONE;
 
   return (
-    <Link to={`/projects/${project.id}`}>
-      <Card className="flex h-full flex-col p-5 transition hover:-translate-y-0.5 hover:border-indigo-200 hover:shadow-md">
-        <span className="mb-3 w-fit rounded-md bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-600">
-          {project.team.name}
-        </span>
-        <h2 className="font-semibold">{project.name}</h2>
-        <p className="mt-1 line-clamp-2 flex-1 text-sm text-zinc-500">{project.description || 'No description'}</p>
-
-        <div className="mt-5">
-          <div className="mb-1.5 flex justify-between text-xs text-zinc-500">
-            <span>{total} tasks</span>
-            <span>{percentDone}% done</span>
-          </div>
-          <div className="h-1.5 overflow-hidden rounded-full bg-zinc-100">
-            <div className="h-full rounded-full bg-indigo-500" style={{ width: `${percentDone}%` }} />
-          </div>
+    <li>
+      <Link
+        to={`/projects/${project.id}`}
+        className="grid gap-x-6 gap-y-3 px-5 py-4 transition-colors hover:bg-rack/60 md:grid-cols-[minmax(0,1fr)_9rem_17rem] md:items-center"
+      >
+        <div className="min-w-0">
+          <h2 className="font-condensed text-xl font-semibold">{project.name}</h2>
+          <p className="truncate text-ink-soft">{project.description || 'No description'}</p>
         </div>
-      </Card>
-    </Link>
+
+        <p className="text-ink-soft">
+          <span className="font-medium text-ink">{project.team.name}</span> team
+        </p>
+
+        <div>
+          <div className="flex h-2.5 overflow-hidden rounded-sm bg-line" aria-hidden="true">
+            {total > 0 &&
+              SEGMENTS.map((s) => (
+                <div key={s.status} className={s.swatch} style={{ width: `${(counts[s.status] / total) * 100}%` }} />
+              ))}
+          </div>
+          <p className="mt-1.5 flex flex-wrap gap-x-3 text-sm text-ink-soft">
+            {total === 0
+              ? 'No tasks yet'
+              : SEGMENTS.map((s) => (
+                  <span key={s.status} className="inline-flex items-center gap-1.5">
+                    <span className={`h-2 w-2 rounded-sm ${s.swatch}`} />
+                    {counts[s.status]} {s.label}
+                  </span>
+                ))}
+          </p>
+        </div>
+      </Link>
+    </li>
   );
 }
 
@@ -101,7 +125,7 @@ function NewProjectModal({ onClose, onCreated }) {
           <Spinner />
         </div>
       ) : teams.length === 0 ? (
-        <p className="text-sm text-zinc-600">Every project belongs to a team. Ask an admin to create a team first.</p>
+        <p className="text-ink-soft">Every project belongs to a team. Ask an admin to create a team first.</p>
       ) : (
         <form onSubmit={handleSubmit} className="space-y-4">
           <Field label="Name">

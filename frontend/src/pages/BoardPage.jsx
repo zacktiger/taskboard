@@ -9,7 +9,7 @@ import { useApi } from '../hooks/useApi.js';
 import { useAuth } from '../context/AuthContext.jsx';
 import { COLUMNS, PRIORITIES, moveTask, tasksInColumn } from '../utils/board.js';
 import {
-  Avatar, Button, EmptyState, ErrorMessage, Field, Input, Loading, Modal, PriorityBadge, Select, Textarea,
+  Avatar, Button, EmptyState, ErrorMessage, Field, Input, Loading, Modal, PriorityTab, Select, Textarea,
 } from '../components/ui.jsx';
 
 export default function BoardPage() {
@@ -58,7 +58,7 @@ export default function BoardPage() {
   if (project.error) {
     return (
       <EmptyState title={project.error}>
-        <Link to="/" className="font-medium text-indigo-600 hover:text-indigo-500">← Back to projects</Link>
+        <Link to="/" className="font-medium text-floor underline underline-offset-4 hover:text-floor-dark">Back to projects</Link>
       </EmptyState>
     );
   }
@@ -68,13 +68,13 @@ export default function BoardPage() {
       {({ project: p }) => (
         <>
           <div className="mb-8 flex flex-wrap items-start justify-between gap-4">
-            <div>
-              <Link to="/" className="text-sm text-zinc-500 hover:text-zinc-900">← Projects</Link>
-              <h1 className="mt-2 text-2xl font-semibold tracking-tight">{p.name}</h1>
-              <p className="mt-1 text-sm text-zinc-500">
-                <span className="font-medium text-zinc-700">{p.team.name}</span>
-                {p.description && ` · ${p.description}`}
+            <div className="min-w-0">
+              <Link to="/" className="text-sm text-ink-soft hover:text-ink">← All projects</Link>
+              <h1 className="mt-2 font-condensed text-[40px] leading-none font-semibold tracking-tight">{p.name}</h1>
+              <p className="mt-2 text-ink-soft">
+                <span className="font-medium text-ink">{p.team.name} team</span>
               </p>
+              {p.description && <p className="mt-1 max-w-prose text-ink-soft">{p.description}</p>}
             </div>
             {allowed('project:write') && (
               <Button variant="secondary" onClick={() => setEditingProject(true)}>Edit project</Button>
@@ -88,7 +88,7 @@ export default function BoardPage() {
           <Loading data={tasks.data} error={tasks.error}>
             {({ tasks: allTasks }) => (
               <DragDropContext onDragEnd={handleDragEnd}>
-                <div className="grid gap-4 md:grid-cols-3">
+                <div className="grid gap-5 md:grid-cols-3">
                   {COLUMNS.map((column) => (
                     <Column
                       key={column.status}
@@ -137,13 +137,13 @@ export default function BoardPage() {
   );
 }
 
+// One column of the board, drawn as a slot in a card rack (the faint lines are the slots).
 function Column({ column, tasks, canEdit, onOpenTask, onAddTask }) {
   return (
-    <div className="flex flex-col rounded-2xl bg-zinc-100/80 p-3">
-      <div className="mb-3 flex items-center gap-2 px-1">
-        <span className={`h-2 w-2 rounded-full ${column.dot}`} />
-        <h2 className="text-sm font-semibold text-zinc-700">{column.label}</h2>
-        <span className="text-xs text-zinc-400">{tasks.length}</span>
+    <section aria-label={column.label} className="flex flex-col rounded bg-rack-deep p-3">
+      <div className="mb-3 flex items-baseline justify-between border-b-2 border-ink px-1 pb-1.5">
+        <h2 className="font-condensed text-[22px] font-semibold">{column.label}</h2>
+        <span className="font-condensed text-[28px] leading-none font-medium text-ink-soft">{tasks.length}</span>
       </div>
 
       <Droppable droppableId={column.status}>
@@ -151,28 +151,19 @@ function Column({ column, tasks, canEdit, onOpenTask, onAddTask }) {
           <div
             ref={provided.innerRef}
             {...provided.droppableProps}
-            className={`min-h-24 flex-1 space-y-2 rounded-xl transition ${snapshot.isDraggingOver ? 'bg-indigo-50' : ''}`}
+            className={`min-h-28 flex-1 space-y-2.5 rounded-sm bg-[repeating-linear-gradient(to_bottom,transparent_0_31px,rgb(31_42_46/0.07)_31px_32px)] p-0.5 transition-colors ${
+              snapshot.isDraggingOver ? 'bg-stock/50' : ''
+            }`}
           >
             {tasks.map((task, index) => (
               <Draggable key={task.id} draggableId={task.id} index={index} isDragDisabled={!canEdit}>
                 {(provided, snapshot) => (
-                  <div
-                    ref={provided.innerRef}
-                    {...provided.draggableProps}
-                    {...provided.dragHandleProps}
-                    onClick={() => onOpenTask(task)}
-                    className={`cursor-pointer rounded-xl border bg-white p-3 text-sm shadow-sm transition hover:border-indigo-200 ${
-                      snapshot.isDragging ? 'rotate-1 border-indigo-300 shadow-lg' : 'border-zinc-200'
-                    }`}
-                  >
-                    <p className="font-medium text-zinc-800">{task.title}</p>
-                    <div className="mt-3 flex items-center gap-2">
-                      <PriorityBadge priority={task.priority} />
-                      {task.description && <span className="text-xs text-zinc-400">≡ Notes</span>}
-                      <span className="flex-1" />
-                      {task.assignee && <Avatar name={task.assignee.name} size="sm" />}
-                    </div>
-                  </div>
+                  <TaskCard
+                    task={task}
+                    provided={provided}
+                    isDragging={snapshot.isDragging}
+                    onOpen={() => onOpenTask(task)}
+                  />
                 )}
               </Draggable>
             ))}
@@ -182,6 +173,34 @@ function Column({ column, tasks, canEdit, onOpenTask, onAddTask }) {
       </Droppable>
 
       {onAddTask && <AddTaskForm onAdd={onAddTask} />}
+    </section>
+  );
+}
+
+// A task drawn as a T-card: coloured priority tab on top, title below.
+// Only the card being dragged gets a shadow — it's the one thing lifted off the rack.
+function TaskCard({ task, provided, isDragging, onOpen }) {
+  return (
+    <div
+      ref={provided.innerRef}
+      {...provided.draggableProps}
+      {...provided.dragHandleProps}
+      onClick={onOpen}
+      className={`cursor-pointer overflow-hidden rounded-[3px] border bg-stock transition-colors ${
+        isDragging ? 'rotate-[1.5deg] border-ink shadow-[0_12px_24px_rgb(31_42_46/0.28)]' : 'border-line hover:border-ink'
+      }`}
+    >
+      <PriorityTab priority={task.priority} />
+      <div className="px-3 pt-2 pb-2.5">
+        <p className="font-condensed text-[17px] leading-snug font-semibold">{task.title}</p>
+        {(task.description || task.assignee) && (
+          <div className="mt-2 flex items-center gap-2 text-sm text-ink-soft">
+            {task.description && <span>Has notes</span>}
+            <span className="flex-1" />
+            {task.assignee && <Avatar name={task.assignee.name} size="sm" />}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -208,7 +227,8 @@ function AddTaskForm({ onAdd }) {
         value={title}
         onChange={(e) => setTitle(e.target.value)}
         placeholder="+ Add a task"
-        className="w-full rounded-xl border border-transparent bg-transparent px-3 py-2 text-sm outline-none transition placeholder:text-zinc-500 hover:bg-white focus:border-zinc-200 focus:bg-white"
+        aria-label="Add a task"
+        className="w-full rounded-[3px] border border-dashed border-ink-soft/50 bg-transparent px-3 py-2 outline-none transition-colors placeholder:text-ink-soft hover:border-ink hover:bg-stock/60 focus:border-floor focus:border-solid focus:bg-stock"
       />
       <ErrorMessage message={error} />
     </form>
@@ -279,11 +299,11 @@ function TaskModal({ task, members, canEdit, onClose, onSaved, onDeleted }) {
           {canEdit ? (
             <Button type="button" variant="danger" onClick={handleDelete}>Delete</Button>
           ) : (
-            <span className="text-xs text-zinc-500">Viewers can't edit tasks.</span>
+            <span className="text-sm text-ink-soft">Viewers can't edit tasks.</span>
           )}
           <div className="flex gap-2">
             <Button type="button" variant="ghost" onClick={onClose}>{canEdit ? 'Cancel' : 'Close'}</Button>
-            {canEdit && <Button type="submit">Save</Button>}
+            {canEdit && <Button type="submit">Save changes</Button>}
           </div>
         </div>
       </form>
@@ -332,7 +352,7 @@ function ProjectModal({ project, onClose, onSaved }) {
           <Button type="button" variant="danger" onClick={handleDelete}>Delete project</Button>
           <div className="flex gap-2">
             <Button type="button" variant="ghost" onClick={onClose}>Cancel</Button>
-            <Button type="submit">Save</Button>
+            <Button type="submit">Save changes</Button>
           </div>
         </div>
       </form>

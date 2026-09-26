@@ -24,7 +24,14 @@ Built solo by a student, so the audience for every file is a student reading it.
   build on Windows), Node `crypto` for refresh/invite tokens.
 - Express 5, so errors thrown in async handlers reach the error handler without wrappers.
 - Prisma is pinned to v6 (v7 changes the client setup).
-- UI: simple but sleek — neutral palette, one accent colour, generous spacing, rounded cards.
+- UI design system, "the production card rack" (kanban = signboard; physical cards in racks).
+  Tokens live in `frontend/src/index.css` (`@theme`); shared pieces in `components/ui.jsx`.
+  - Colour: rack grey page, card-stock surfaces, ink text. **Floor green is the only action
+    colour.** Red/amber/blue are **priority only** (red also for errors). Avatars and roles stay neutral.
+  - Type: Barlow for body, Barlow Condensed for titles and counts. Sentence case, no all-caps labels.
+  - Tasks are T-cards: a square priority tab (colour + word) on top. Only a dragged card has a shadow.
+  - Radii by hierarchy: cards 3px, controls 6px, modals 10px. No gradients or decorative shadows.
+  - Copy: buttons say what they do ("Save changes", "Add to team"); errors say what to do next.
 
 ## Layout
 

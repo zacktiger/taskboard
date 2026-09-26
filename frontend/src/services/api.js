@@ -63,12 +63,21 @@ function send(path, { method = 'GET', body } = {}) {
     method,
     headers,
     body: body === undefined ? undefined : JSON.stringify(body),
+  }).catch(() => {
+    // fetch only throws when no response came back at all (offline, server down).
+    throw new ApiError(0, "Can't reach the server. Check your connection and try again.");
   });
 }
 
 async function readResponse(res) {
   if (res.status === 204) return null;
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new ApiError(res.status, data.error ?? 'Something went wrong');
+  if (!res.ok) throw new ApiError(res.status, data.error ?? fallbackMessage(res.status));
   return data;
+}
+
+// Used only when the server didn't send its own { error } message.
+function fallbackMessage(status) {
+  if (status >= 500) return 'The server ran into a problem. Try again in a moment.';
+  return `The request failed (status ${status}). Try again.`;
 }

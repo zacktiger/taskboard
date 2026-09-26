@@ -1,13 +1,16 @@
-// The frame around every logged-in page: sidebar navigation + the page itself.
-import { NavLink, Outlet } from 'react-router-dom';
+// The frame around every logged-in page: a top rail (org, navigation, you) + the page itself.
+// A top rail instead of a sidebar leaves the full width for the board's columns.
+import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
-import { Avatar, RoleBadge } from './ui.jsx';
+import { Avatar, CardMark, RoleBadge } from './ui.jsx';
 
 export default function Layout() {
   const { user, logout, allowed } = useAuth();
+  const { pathname } = useLocation();
 
   const links = [
-    { to: '/', label: 'Projects', end: true },
+    // A project's board lives under /projects/..., so "Projects" stays highlighted there too.
+    { to: '/', label: 'Projects', end: true, alsoActive: pathname.startsWith('/projects/') },
     { to: '/teams', label: 'Teams' },
     // Only admins can open the members page, so only admins see the link.
     allowed('member:manage') && { to: '/members', label: 'Members' },
@@ -15,54 +18,47 @@ export default function Layout() {
   ].filter(Boolean);
 
   return (
-    <div className="flex min-h-screen flex-col md:flex-row">
-      <aside className="flex shrink-0 flex-col border-b border-zinc-200 bg-white md:sticky md:top-0 md:h-screen md:w-60 md:border-r md:border-b-0">
-        <div className="flex items-center gap-2.5 px-5 py-5">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-600 text-sm font-bold text-white">
-            {user.org.name[0].toUpperCase()}
+    <div className="min-h-screen">
+      <header className="sticky top-0 z-40 border-b border-ink bg-stock">
+        <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-x-8 px-4 md:px-8">
+          <div className="flex min-w-0 items-center gap-2.5 py-3">
+            <CardMark />
+            <span className="truncate font-condensed text-xl font-semibold">{user.org.name}</span>
           </div>
-          <div className="min-w-0">
-            <p className="truncate text-sm font-semibold">{user.org.name}</p>
-            <p className="text-xs text-zinc-500">Workspace</p>
+
+          {/* On phones the links drop to their own row and scroll sideways. */}
+          <nav className="order-last -mx-4 flex w-full gap-1 overflow-x-auto px-4 [scrollbar-width:none] md:order-none md:mx-0 md:w-auto md:self-stretch md:px-0">
+            {links.map((link) => (
+              <NavLink
+                key={link.to}
+                to={link.to}
+                end={link.end}
+                className={({ isActive }) =>
+                  `flex items-center whitespace-nowrap border-b-[3px] px-2 pt-3 pb-2.5 font-medium transition-colors ${
+                    isActive || link.alsoActive ? 'border-floor text-ink' : 'border-transparent text-ink-soft hover:text-ink'
+                  }`
+                }
+              >
+                {link.label}
+              </NavLink>
+            ))}
+          </nav>
+
+          <div className="ml-auto flex items-center gap-3 py-3">
+            <Avatar name={user.name} />
+            <div className="hidden text-right leading-tight sm:block">
+              <p className="text-sm font-medium">{user.name}</p>
+              <RoleBadge role={user.role} />
+            </div>
+            <button onClick={logout} className="rounded-md px-2 py-1 text-sm text-ink-soft hover:bg-rack hover:text-ink">
+              Log out
+            </button>
           </div>
         </div>
+      </header>
 
-        <nav className="flex gap-1 overflow-x-auto px-3 pb-3 [scrollbar-width:none] md:flex-1 md:flex-col md:pb-0">
-          {links.map((link) => (
-            <NavLink
-              key={link.to}
-              to={link.to}
-              end={link.end}
-              className={({ isActive }) =>
-                `whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium transition ${
-                  isActive ? 'bg-zinc-100 text-zinc-900' : 'text-zinc-500 hover:bg-zinc-50 hover:text-zinc-900'
-                }`
-              }
-            >
-              {link.label}
-            </NavLink>
-          ))}
-          <button onClick={logout} className="whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium text-zinc-500 md:hidden">
-            Log out
-          </button>
-        </nav>
-
-        <div className="hidden items-center gap-3 border-t border-zinc-200 px-4 py-4 md:flex">
-          <Avatar name={user.name} />
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-medium">{user.name}</p>
-            <RoleBadge role={user.role} />
-          </div>
-          <button onClick={logout} className="text-xs text-zinc-500 hover:text-zinc-900">
-            Log out
-          </button>
-        </div>
-      </aside>
-
-      <main className="min-w-0 flex-1 px-4 py-8 md:px-10">
-        <div className="mx-auto max-w-6xl">
-          <Outlet />
-        </div>
+      <main className="mx-auto max-w-7xl px-4 py-8 md:px-8 md:py-10">
+        <Outlet />
       </main>
     </div>
   );

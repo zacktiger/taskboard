@@ -1,18 +1,18 @@
 // Kanban helpers shared by the board and the activity feed.
 
 export const COLUMNS = [
-  { status: 'TODO', label: 'To do', dot: 'bg-zinc-400' },
-  { status: 'IN_PROGRESS', label: 'In progress', dot: 'bg-amber-400' },
-  { status: 'DONE', label: 'Done', dot: 'bg-emerald-500' },
+  { status: 'TODO', label: 'To do' },
+  { status: 'IN_PROGRESS', label: 'In progress' },
+  { status: 'DONE', label: 'Done' },
 ];
 
 export const STATUS_LABELS = Object.fromEntries(COLUMNS.map((c) => [c.status, c.label]));
 
-// Task priorities, highest first, with the colours used for their badge.
+// Task priorities, highest first. `tab` styles the coloured tab on top of a task card.
 export const PRIORITIES = [
-  { value: 'HIGH', label: 'High', badge: 'bg-red-50 text-red-700 ring-red-200' },
-  { value: 'MEDIUM', label: 'Medium', badge: 'bg-amber-50 text-amber-700 ring-amber-200' },
-  { value: 'LOW', label: 'Low', badge: 'bg-sky-50 text-sky-700 ring-sky-200' },
+  { value: 'HIGH', label: 'High', tab: 'bg-tab-high text-white' },
+  { value: 'MEDIUM', label: 'Medium', tab: 'bg-tab-medium text-ink' },
+  { value: 'LOW', label: 'Low', tab: 'bg-tab-low text-white' },
 ];
 
 // The tasks in one column, top to bottom.

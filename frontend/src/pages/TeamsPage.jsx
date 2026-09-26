@@ -25,7 +25,7 @@ export default function TeamsPage() {
 
   return (
     <>
-      <PageHeader title="Teams" subtitle="Groups of people who work on projects together" />
+      <PageHeader title="Teams" subtitle="Groups of people who work on projects together." />
       {canManage && <NewTeamForm onCreate={(name) => run(() => api('/teams', { method: 'POST', body: { name } }))} />}
       <div className="mb-4">
         <ErrorMessage message={error} />
@@ -90,45 +90,50 @@ function TeamCard({ team, orgMembers, canManage, run }) {
     <Card className="p-5">
       <div className="mb-4 flex items-start justify-between">
         <div>
-          <h2 className="font-semibold">{team.name}</h2>
-          <p className="text-xs text-zinc-500">
-            {team.members.length} members · {team.projectCount} projects
+          <h2 className="font-condensed text-xl font-semibold">{team.name}</h2>
+          <p className="text-sm text-ink-soft">
+            {plural(team.members.length, 'member')}, {plural(team.projectCount, 'project')}
           </p>
         </div>
         {canManage && (
-          <Button variant="ghost" className="text-xs" onClick={deleteTeam}>Delete</Button>
+          <Button variant="ghost" onClick={deleteTeam}>Delete team</Button>
         )}
       </div>
 
       <ul className="space-y-2">
         {team.members.map((member) => (
-          <li key={member.id} className="flex items-center gap-3 text-sm">
+          <li key={member.id} className="flex items-center gap-3">
             <Avatar name={member.name} size="sm" />
             <span className="flex-1">{member.name}</span>
             {canManage && (
               <button
                 onClick={() => run(() => api(`/teams/${team.id}/members/${member.id}`, { method: 'DELETE' }))}
-                className="text-xs text-zinc-400 hover:text-red-600"
+                className="rounded px-1.5 py-0.5 text-sm text-ink-soft hover:text-tab-high"
               >
                 Remove
               </button>
             )}
           </li>
         ))}
-        {team.members.length === 0 && <li className="text-sm text-zinc-400">No one yet</li>}
+        {team.members.length === 0 && <li className="text-ink-soft">No one on this team yet.</li>}
       </ul>
 
       {canManage && addable.length > 0 && (
-        <form onSubmit={addMember} className="mt-4 flex gap-2 border-t border-zinc-100 pt-4">
+        <form onSubmit={addMember} className="mt-4 flex gap-2 border-t border-line pt-4">
           <Select value={userToAdd} onChange={(e) => setUserToAdd(e.target.value)} required>
             <option value="">Add a member…</option>
             {addable.map((m) => (
               <option key={m.id} value={m.id}>{m.name}</option>
             ))}
           </Select>
-          <Button type="submit" variant="secondary" className="shrink-0">Add</Button>
+          <Button type="submit" variant="secondary" className="shrink-0">Add to team</Button>
         </form>
       )}
     </Card>
   );
+}
+
+// "1 member", "3 members"
+function plural(count, word) {
+  return `${count} ${word}${count === 1 ? '' : 's'}`;
 }
